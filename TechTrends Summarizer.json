@@ -1,0 +1,370 @@
+{
+  "name": "TechTrends Summarizer",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://moxie.foxnews.com/google-publisher/tech.xml",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "3f7bf64a-cdf5-4699-b321-aae9265bc58f",
+      "name": "RSS Read"
+    },
+    {
+      "parameters": {
+        "maxItems": 2
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "3c5f3b39-4dcc-448c-b7e3-76c3ef992e48",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.guid }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "7538c20b-8ae0-4bfa-8fcc-d86aaf3c37fd",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "html": "={{ $json.data }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.markdown",
+      "typeVersion": 1,
+      "position": [
+        832,
+        0
+      ],
+      "id": "06cb2b0a-8846-49e0-8e9e-9a6ea7584106",
+      "name": "Markdown"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1040,
+        208
+      ],
+      "id": "bbe3a4d9-843a-47ec-a5bc-3b5272266c0e",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "637BcLYyNoLohyZQ",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=This is the data to be processed:  {{ $json.data }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a helpful, intelligent summarizer assistant. Your task is to identify the main body text of the article and create a detailed summary of its contents. Identify any key subjects or themes and the main topic of the article. \n\nSummaries should be no more than 1000 characters. Do not include any extra words or phrases like \"summary of article\" or \"the article discusses\"."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "3679c434-0663-4fc3-bba8-27a85234d7db",
+      "name": "AI Summarizer"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e2d5eede-2e58-44a8-948b-9a61391e253a",
+              "name": "Summary",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "1e3828ac-ebb1-4e12-b1c3-87435f4a57e7",
+              "name": "Title",
+              "value": "={{ $('RSS Read').item.json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "1f5db5fd-52fe-4d64-9572-7f695eb08565",
+              "name": "Published Date",
+              "value": "={{ $('RSS Read').item.json.pubDate }}",
+              "type": "string"
+            },
+            {
+              "id": "7af6e1c2-513d-4558-90e0-847415ee3373",
+              "name": "Source",
+              "value": "={{ $('RSS Read').item.json.guid }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1392,
+        0
+      ],
+      "id": "374950d4-5f4f-411d-83fb-6481d48f66a8",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "app79oMjIdNOPn6Cz",
+          "mode": "list",
+          "cachedResultName": "RSS Feeds",
+          "cachedResultUrl": "https://airtable.com/app79oMjIdNOPn6Cz"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblMuV82eUi3MwkJ7",
+          "mode": "list",
+          "cachedResultName": "Table 1",
+          "cachedResultUrl": "https://airtable.com/app79oMjIdNOPn6Cz/tblMuV82eUi3MwkJ7"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Title": "={{ $json.Title }}",
+            "Summary": "={{ $json.Summary }}",
+            "Published Date": "={{ $json['Published Date'] }}",
+            "Source": "={{ $json.Source }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Summary",
+              "displayName": "Summary",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Published Date",
+              "displayName": "Published Date",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Post to Social Media",
+              "displayName": "Post to Social Media",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1648,
+        0
+      ],
+      "id": "ff9f86d1-8f2a-4937-b1dc-673da166591a",
+      "name": "Create a record",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "rWbvj7ep2WCmBQi4",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d06f9831-7afc-4a83-93e9-c08fb5268df8",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Markdown": {
+      "main": [
+        [
+          {
+            "node": "AI Summarizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Summarizer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Summarizer": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Create a record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "9c78ff60-98c1-4dd7-a87e-2290c940b278",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7f54f0d36ff1124890b2138955280c2c95225acd40a1709b12a07276e2c3eff9"
+  },
+  "id": "bsdzZFrWYZOciYCj",
+  "tags": []
+}
